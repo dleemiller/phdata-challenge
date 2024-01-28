@@ -1,13 +1,15 @@
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, MinMaxScaler
-from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, KBinsDiscretizer
+from sklearn.decomposition import PCA
 
 from .sinusoidal_scaler import SinusoidalTransformer
 from .scaler_999 import Scaler999
+from .band_extraction import ExtractBand
 
 
 class TransformerConfigBase:
+    """A base class for exporting a configuration"""
 
     @classmethod
     def export(cls):
@@ -17,15 +19,12 @@ class TransformerConfigBase:
 
 
 class OneHotConfig(TransformerConfigBase):
-
-    @classmethod
-    def new(cls):
-        cls.transformer = OneHotEncoder(handle_unknown="ignore")
-        cls.features = ["b1", "b2"]
-        return cls.export()
+    features = ["c3", "c4", "c8", "marriage-status", "school", "employment"]
+    transformer = OneHotEncoder(handle_unknown="ignore")
 
 
 class SinusoidalMonthConfig(TransformerConfigBase):
+    features = ["month"]
     column_map = {
         "jan": 1,
         "feb": 2,
@@ -44,62 +43,63 @@ class SinusoidalMonthConfig(TransformerConfigBase):
     @classmethod
     def new(cls):
         cls.transformer = SinusoidalTransformer(12, cls.column_map)
-        cls.features = ["month"]
         return cls.export()
 
 
 class SinusoidalDayConfig(TransformerConfigBase):
+    features = ["dow"]
     column_map = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5}
 
     @classmethod
     def new(cls):
         cls.transformer = SinusoidalTransformer(5, cls.column_map)
-        cls.features = ["dow"]
         return cls.export()
 
 
 class Scaler999Config(TransformerConfigBase):
     """Maps 999 to 1 and everything else to 0!"""
 
-    @classmethod
-    def new(cls):
-        cls.transformer = Scaler999()
-        cls.features = ["n4"]
-        return cls.export()
+    features = ["n4"]
+    transformer = Scaler999()
+
+
+class ExtractBandConfig(TransformerConfigBase):
+    """Extract band from between two values as feature"""
+
+    features = ["i3"]
+    transformer = ExtractBand(-40.8, -37.5)
+
+
+class KBinsUniformConfig(TransformerConfigBase):
+    features = ["i1"]
+    transformer = KBinsDiscretizer(
+        n_bins=10, encode="onehot", strategy="uniform", subsample=None
+    )
+
+
+class KBinsKMeansConfig(TransformerConfigBase):
+    features = ["i2"]
+    transformer = KBinsDiscretizer(
+        n_bins=10, encode="onehot", strategy="kmeans", subsample=None
+    )
+
+
+class PCAConfig(TransformerConfigBase):
+    features = ["i1", "i2", "i4", "i5"]
+    transformer = PCA(n_components=1)
 
 
 preprocessor = ColumnTransformer(
     transformers=[
-        OneHotConfig.new(),
+        OneHotConfig.export(),
         SinusoidalMonthConfig.new(),
         SinusoidalDayConfig.new(),
-        ("drop", "drop", ["c10"]),
+        Scaler999Config.export(),
+        ExtractBandConfig.export(),
+        KBinsUniformConfig.export(),
+        # KBinsKMeansConfig.export(),
+        PCAConfig.export(),
+        ("pass", "passthrough", ["n2", "n6", "age"]),
+        ("drop", "drop", ["c10", "b1", "b2", "n3", "n5", "successful_sell"]),
     ]
 )
-# # Define the transformations for each column type
-# numeric_features = ['age']
-# numeric_transformer = Pipeline(steps=[
-#     ('imputer', SimpleImputer(strategy='median')),
-#     ('scaler', StandardScaler())])
-#
-# b_features = ['b1', 'b2']
-# b_transformer = MinMaxScaler()
-#
-# categorical_features = ['employment', 'school', 'dow']
-# categorical_transformer = OneHotEncoder(handle_unknown='ignore')
-#
-# c_features = ['c10', 'c3', 'c4', 'c8']
-# c_transformer = SimpleImputer(strategy='mean')
-#
-# # Column transformer
-# preprocessor = ColumnTransformer(
-#     transformers=[
-#         ('num', numeric_transformer, numeric_features),
-#         ('b', b_transformer, b_features),
-#         ('cat', categorical_transformer, categorical_features),
-#         ('c', c_transformer, c_features),
-#         ('drop', 'drop', ['i1', 'i2', 'successful_sell'])
-#     ])
-#
-# # Create the full pipeline
-# pipeline = Pipeline(steps=[('preprocessor', preprocessor)])
