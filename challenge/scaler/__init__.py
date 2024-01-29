@@ -1,6 +1,12 @@
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, KBinsDiscretizer
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    OneHotEncoder,
+    KBinsDiscretizer,
+    OrdinalEncoder,
+    QuantileTransformer,
+)
 from sklearn.decomposition import PCA
 
 from .sinusoidal_scaler import SinusoidalTransformer
@@ -19,8 +25,20 @@ class TransformerConfigBase:
 
 
 class OneHotConfig(TransformerConfigBase):
-    features = ["c3", "c4", "c8", "marriage-status", "school", "employment"]
-    transformer = OneHotEncoder(handle_unknown="ignore")
+    features = ["marriage-status", "employment", "school", "c8", "c3", "month", "dow"]
+    transformer = OneHotEncoder(
+        handle_unknown="infrequent_if_exist", min_frequency=0.05
+    )
+
+
+class OrdinalConfig(TransformerConfigBase):
+    features = ["b1", "b2", "c4", "c8"]
+    transformer = OrdinalEncoder(
+        handle_unknown="use_encoded_value",
+        unknown_value=-1,
+        encoded_missing_value=-1,
+        min_frequency=0.05,
+    )
 
 
 class SinusoidalMonthConfig(TransformerConfigBase):
@@ -63,43 +81,55 @@ class Scaler999Config(TransformerConfigBase):
     transformer = Scaler999()
 
 
-class ExtractBandConfig(TransformerConfigBase):
+class ExtractI1BandConfig(TransformerConfigBase):
+    """Extract band from between two values as feature"""
+
+    features = ["i1"]
+    transformer = ExtractBand(-1.8, -1.1)
+
+
+class ExtractI3BandConfig(TransformerConfigBase):
     """Extract band from between two values as feature"""
 
     features = ["i3"]
     transformer = ExtractBand(-40.8, -37.5)
 
 
-class KBinsUniformConfig(TransformerConfigBase):
-    features = ["i1"]
-    transformer = KBinsDiscretizer(
-        n_bins=10, encode="onehot", strategy="uniform", subsample=None
-    )
-
-
-class KBinsKMeansConfig(TransformerConfigBase):
+class KBinsConfig(TransformerConfigBase):
     features = ["i2"]
     transformer = KBinsDiscretizer(
-        n_bins=10, encode="onehot", strategy="kmeans", subsample=None
+        n_bins=10, encode="ordinal", strategy="uniform", subsample=None
     )
 
 
 class PCAConfig(TransformerConfigBase):
-    features = ["i1", "i2", "i4", "i5"]
-    transformer = PCA(n_components=1)
+    features = ["i1", "i2", "i4", "i5", "n6"]
+    transformer = Pipeline(
+        [
+            ("scaler", QuantileTransformer(output_distribution="normal")),
+            ("pca", PCA(n_components=2)),
+        ]
+    )
+
+
+class QuantileConfig(TransformerConfigBase):
+    features = ["n2", "n6", "age", "i1", "i2", "i3", "i4", "i5"]
+    transformer = QuantileTransformer(output_distribution="normal")
 
 
 preprocessor = ColumnTransformer(
     transformers=[
         OneHotConfig.export(),
-        SinusoidalMonthConfig.new(),
-        SinusoidalDayConfig.new(),
+        OrdinalConfig.export(),
+        # SinusoidalMonthConfig.new(),
+        # SinusoidalDayConfig.new(),
         Scaler999Config.export(),
-        ExtractBandConfig.export(),
-        KBinsUniformConfig.export(),
-        # KBinsKMeansConfig.export(),
-        PCAConfig.export(),
-        ("pass", "passthrough", ["n2", "n6", "age"]),
-        ("drop", "drop", ["c10", "b1", "b2", "n3", "n5", "successful_sell"]),
+        ExtractI1BandConfig.export(),
+        ExtractI3BandConfig.export(),
+        KBinsConfig.export(),
+        # PCAConfig.export(),
+        QuantileConfig.export(),
+        ("pass", "passthrough", ["n4"]),
+        ("drop", "drop", ["c10", "n3", "n5", "successful_sell"]),
     ]
 )
