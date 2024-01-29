@@ -26,7 +26,7 @@ pipeline = Pipeline(
 )
 
 
-def search(args, n_jobs=-1):
+def search(args, n_jobs:int=-1):
     with open(args.file, "r") as fh:
         import json
 
@@ -51,7 +51,7 @@ def search(args, n_jobs=-1):
         json.dump(best_params, fh, indent=4)
 
 
-def print_important_features(pipeline):
+def print_important_features(pipeline: Pipeline) -> None:
     feature_names = []
     for name, transformer, column in preprocessor.transformers_[:-1]:
         if transformer in ["drop"]:
@@ -72,7 +72,7 @@ def print_important_features(pipeline):
     print(feature_importances)
 
 
-def save_eval_metrics(pipeline):
+def save_eval_metrics(pipeline: Pipeline) -> None:
     # save the confusion matrix
     y_pred = pipeline.predict(X_test)
     conf_matrix = confusion_matrix(y_test, y_pred)
@@ -89,7 +89,7 @@ def save_eval_metrics(pipeline):
         file.write(report)
 
 
-def train(args):
+def train(args) -> None:
     if not os.path.exists("artifacts/best_params.json"):
         raise FileNotFoundError("Run gridsearch before training.")
 

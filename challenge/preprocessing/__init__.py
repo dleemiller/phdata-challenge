@@ -59,9 +59,9 @@ class SinusoidalMonthConfig(TransformerConfigBase):
     }
 
     @classmethod
-    def new(cls):
+    def export(cls):
         cls.transformer = SinusoidalTransformer(12, cls.column_map)
-        return cls.export()
+        return super().export()
 
 
 class SinusoidalDayConfig(TransformerConfigBase):
@@ -69,9 +69,9 @@ class SinusoidalDayConfig(TransformerConfigBase):
     column_map = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5}
 
     @classmethod
-    def new(cls):
+    def export(cls):
         cls.transformer = SinusoidalTransformer(5, cls.column_map)
-        return cls.export()
+        return super().export()
 
 
 class Scaler999Config(TransformerConfigBase):
@@ -121,7 +121,7 @@ preprocessor = ColumnTransformer(
     transformers=[
         OneHotConfig.export(),
         OrdinalConfig.export(),
-        # SinusoidalMonthConfig.new(),
+        SinusoidalMonthConfig.export(),
         # SinusoidalDayConfig.new(),
         Scaler999Config.export(),
         ExtractI1BandConfig.export(),

@@ -1,8 +1,8 @@
 {
     "classifier__n_estimators": [250, 350, 500],
     "classifier__max_features": ["log2", "sqrt"],
-    "classifier__max_depth": [35],
-    "classifier__min_samples_split": [6],
+    "classifier__max_depth": [30, 35, 40],
+    "classifier__min_samples_split": [6, 8, 10],
     "classifier__min_samples_leaf": [2, 3, 4],
     "classifier__bootstrap": [true],
     "classifier__class_weight": ["balanced_subsample"],
