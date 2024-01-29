@@ -1,12 +1,12 @@
 {
     "classifier__bootstrap": true,
     "classifier__class_weight": "balanced_subsample",
-    "classifier__max_depth": 30,
-    "classifier__max_features": "sqrt",
-    "classifier__min_samples_leaf": 2,
-    "classifier__min_samples_split": 8,
+    "classifier__max_depth": 35,
+    "classifier__max_features": "log2",
+    "classifier__min_samples_leaf": 3,
+    "classifier__min_samples_split": 6,
     "classifier__n_estimators": 250,
     "preprocessor__KBinsConfig__encode": "onehot-dense",
-    "preprocessor__KBinsConfig__n_bins": 15,
+    "preprocessor__KBinsConfig__n_bins": 16,
     "preprocessor__KBinsConfig__strategy": "quantile"
 }

@@ -107,7 +107,7 @@ class PCAConfig(TransformerConfigBase):
     transformer = Pipeline(
         [
             ("scaler", QuantileTransformer(output_distribution="normal")),
-            ("pca", PCA(n_components=2)),
+            ("pca", PCA(n_components=1)),
         ]
     )
 
@@ -129,7 +129,7 @@ preprocessor = ColumnTransformer(
         KBinsConfig.export(),
         # PCAConfig.export(),
         QuantileConfig.export(),
-        ("pass", "passthrough", ["n4"]),
+        ("pass", "passthrough", ["n4", "i3"]),
         ("drop", "drop", ["c10", "n3", "n5", "successful_sell"]),
     ]
 )
