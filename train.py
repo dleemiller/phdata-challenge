@@ -17,7 +17,7 @@ y = df.successful_sell.factorize()[0]
 
 # train/test split the data
 X_train, X_test, y_train, y_test = train_test_split(
-    df, y, test_size=0.2, random_state=42
+    df, y, test_size=0.1, random_state=42
 )
 
 # create the training pipeline
@@ -26,7 +26,10 @@ pipeline = Pipeline(
 )
 
 
-def search(args, n_jobs:int=-1):
+def search(args, n_jobs: int = -1, scoring="f1_macro"):
+    """
+    Perform a grid search over parameters, and saves the results as JSON.
+    """
     with open(args.file, "r") as fh:
         import json
 
@@ -52,6 +55,9 @@ def search(args, n_jobs:int=-1):
 
 
 def print_important_features(pipeline: Pipeline) -> None:
+    """
+    Prints the feature importances from the fit.
+    """
     feature_names = []
     for name, transformer, column in preprocessor.transformers_[:-1]:
         if transformer in ["drop"]:
@@ -73,10 +79,12 @@ def print_important_features(pipeline: Pipeline) -> None:
 
 
 def save_eval_metrics(pipeline: Pipeline) -> None:
+    """
+    Save metrics from the evalution for later reference.
+    """
     # save the confusion matrix
     y_pred = pipeline.predict(X_test)
     conf_matrix = confusion_matrix(y_test, y_pred)
-    print(conf_matrix)
 
     sns.heatmap(conf_matrix, annot=True, fmt="g", cmap="Blues")
     plt.xlabel("Predicted labels")
@@ -85,11 +93,15 @@ def save_eval_metrics(pipeline: Pipeline) -> None:
     plt.savefig("artifacts/conf_matrix.png")
 
     report = classification_report(y_test, y_pred)
+    print("Test Results:\n\n", report)
     with open("artifacts/classification_report.txt", "w") as file:
         file.write(report)
 
 
 def train(args) -> None:
+    """
+    Train the model in the pipeline using best parameters from the grid search.
+    """
     if not os.path.exists("artifacts/best_params.json"):
         raise FileNotFoundError("Run gridsearch before training.")
 
@@ -103,6 +115,11 @@ def train(args) -> None:
     pipeline.fit(X_train, y_train)
     if args.print_important:
         print_important_features(pipeline)
+
+    # print train metrics
+    y_pred = pipeline.predict(X_train)
+    conf_matrix = confusion_matrix(y_train, y_pred)
+    print("Training Results:\n\n", classification_report(y_train, y_pred))
 
     # save artifacts
     save_eval_metrics(pipeline)
@@ -127,7 +144,7 @@ if __name__ == "__main__":
 
     parser_search = subparsers.add_parser("search", help="gridsearch help")
     parser_search.add_argument(
-        "--file", type=str, help="File path for grid parameters in JSON"
+        "--file", type=str, help="File path for grid parameters in JSON", required=True
     )
     parser_search.add_argument(
         "--cv", type=int, default=3, help="Number of cross validation folds"
