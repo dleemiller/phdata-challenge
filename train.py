@@ -6,7 +6,7 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import OneHotEncoder
 
 from challenge.preprocessing import preprocessor
@@ -35,8 +35,9 @@ def search(args, n_jobs: int = -1, scoring="f1_macro"):
 
         param_grid = json.load(fh)
 
+    skf_cv = StratifiedKFold(n_splits=args.cv)
     grid_search = GridSearchCV(
-        pipeline, param_grid, cv=args.cv, n_jobs=n_jobs, verbose=2, scoring="f1_macro"
+        pipeline, param_grid, cv=skf_cv, n_jobs=n_jobs, verbose=2, scoring="f1_macro"
     )
     grid_search.fit(X_train, y_train)
 
